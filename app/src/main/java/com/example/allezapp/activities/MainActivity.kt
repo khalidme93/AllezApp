@@ -4,7 +4,6 @@ import android.app.Activity
 import android.content.Intent
 import android.os.Build
 import android.os.Bundle
-import android.os.CountDownTimer
 import android.util.Log
 import android.view.MenuItem
 import android.view.WindowInsets
@@ -12,8 +11,6 @@ import android.view.WindowManager
 import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
-import android.widget.Toast
-import android.widget.Toast.*
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
@@ -23,7 +20,6 @@ import com.example.allezapp.firebase.FirestoreClass
 import com.example.allezapp.models.User
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
-import de.hdodenhof.circleimageview.CircleImageView
 
 
 @Suppress("DEPRECATION")
