@@ -6,10 +6,7 @@ import android.os.CountDownTimer
 import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
-import android.widget.LinearLayout
-import android.widget.ProgressBar
-import android.widget.TextView
-import android.widget.Toast
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
 import com.example.allezapp.R
@@ -92,6 +89,8 @@ class ExerciseActivity : AppCompatActivity(){
         }.start()
     }
     private fun setupRestView(){
+        findViewById<LinearLayout>(R.id.llRestView).visibility = View.VISIBLE
+        findViewById<LinearLayout>(R.id.llExerciseView).visibility = View.GONE
         if(restTimer != null){
             restTimer!!.cancel()
             restProgress = 0
@@ -108,10 +107,15 @@ class ExerciseActivity : AppCompatActivity(){
             }
 
             override fun onFinish() {
-                Toast.makeText(this@ExerciseActivity,
-                        "we will start the next rest screen",
-                        Toast.LENGTH_SHORT
-                ).show()
+                if(currentExercisePosition < exerciseList?.size!! - 1){
+                    setupRestView()
+                }else{
+                    Toast.makeText(
+                            this@ExerciseActivity,
+                            "GOOD JOB",
+                            Toast.LENGTH_SHORT
+                    ).show()
+                }
             }
         }.start()
     }
@@ -125,5 +129,7 @@ class ExerciseActivity : AppCompatActivity(){
             exerciseProgress = 0
         }
         setExerciseProgressBar()
+        findViewById<ImageView>(R.id.ivImage).setImageResource(exerciseList!![currentExercisePosition].getImage())
+        findViewById<TextView>(R.id.tvExerciseName).text = exerciseList!![currentExercisePosition].getName()
     }
 }
