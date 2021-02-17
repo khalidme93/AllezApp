@@ -1,5 +1,7 @@
 package com.example.allezapp.activities
 
+import android.media.MediaPlayer
+import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -14,6 +16,7 @@ import androidx.appcompat.widget.Toolbar
 import com.example.allezapp.R
 import com.example.allezapp.models.Exercise
 import com.example.allezapp.utils.Constant
+import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
@@ -27,6 +30,7 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     private var exerciseList: ArrayList<Exercise>? = null
     private var currentExercisePosition = -1
     private var tts: TextToSpeech? = null
+    private var player: MediaPlayer? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,9 +77,12 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             exerciseTimer!!.cancel()
             exerciseProgress = 0
         }
-        if(tts!= null){
+        if (tts != null) {
             tts!!.stop()
             tts!!.shutdown()
+        }
+        if(player!= null){
+            player!!.stop()
         }
 
         super.onDestroy()
@@ -98,6 +105,17 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
     }
 
     private fun setupRestView() {
+
+        try {
+            player = MediaPlayer.create(applicationContext, R.raw.beep_signal)
+            player!!.isLooping = false
+            player!!.start()
+
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
+
+
         findViewById<LinearLayout>(R.id.llRestView).visibility = View.VISIBLE
         findViewById<LinearLayout>(R.id.llExerciseView).visibility = View.GONE
         if (restTimer != null) {
@@ -161,8 +179,6 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun speakOut(text: String) {
         tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
-
-
     }
 }
 
