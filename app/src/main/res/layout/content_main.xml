@@ -34,7 +34,19 @@
                 android:textColor="@color/colorPrimary"
                 android:textSize="@dimen/start_button_label_textsize"
                 android:textStyle="bold" />
+
+
+
         </LinearLayout>
+        <ListView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:id="@+id/workoutsList"
+            android:divider="@color/colorAccent"
+            android:dividerHeight="1dp"
+            android:listSelector="@android:color/holo_blue_light"
+            android:clickable="true"/>
+
     </LinearLayout>
 
 

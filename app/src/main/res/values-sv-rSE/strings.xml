@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">AllezApp</string>
+    <string name="image_contentDescription">bild</string>
+    <string name="intro_text_description">Kom i form</string>
+    <string name="sign_in">LOGGA IN</string>
+    <string name="sign_up">REGISTRERA</string>
+    <string name="sign_in_description_text">Ange ditt e-post och lösenord för att logga in.</string>
+    <string name="sign_up_description_text">Ange ditt namn, e-post och lösenord för att registrera dig hos oss.</string>
+    <string name="name">Namn</string>
+    <string name="password">Lösenord</string>
+    <string name="email">E-post</string>
+    <string name="please_click_back_again_to_exit">Klicka tillbaka igen för att avsluta.</string>
+    <string name="please_wait">Vänligen Vänta&#8230;</string>
+    <string name="nav_my_profile">Min Profil</string>
+    <string name="nav_sign_out">Logga Ut</string>
+    <string name="nav_workout">Träna</string>
+    <string name="update">UPPDATERA</string>
+    <string name="my_profile">Min Profil</string>
+    <string name="workout">Träna</string>
+    <string name="exercises">Övningar</string>
+    <string name="image">Bild</string>
+    <string name="str_start">Påbörja</string>
+    <string name="create_workout_title">Skapa tränings pass</string>
+    <string name="create">SKAPA</string>
+    <string name="workout_name">Träningsnamn</string>
+    <string name="no_Workouts_are_available">Inga träningspass är tillgängliga !!!</string>
+    <string name="no_exercises_added">Inga övningar tillagda</string>
+    <string name="no_exercises_inDataBase">Inga övningar i databasen</string>
+    <string name="AddExercises">Lägg till övning</string>
+    <string name="createWorkout">Skapa träning</string>
+    <string name="myExercises">Mina träningspass</string>
+    <string name="finish">Avsluta</string>
+    <string name="let_s_get_started_text">Börja träna nu!</string>
+</resources>

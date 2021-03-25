@@ -18,11 +18,27 @@
 
     <string name="nav_my_profile">My Profile</string>
     <string name="nav_sign_out">Sign Out</string>
+    <string name="nav_workout">Work Out</string>
 
-    <string name="weight">WEIGHT</string>
+
     <string name="update">UPDATE</string>
     <string name="my_profile">My Profile</string>
+    <string name="workout">Workout</string>
+    <string name="exercises">Exercises</string>
+
 
     <string name="image">image</string>
     <string name="str_start">START</string>
+
+    <string name="create_workout_title">Create Workout</string>
+    <string name="create">CREATE</string>
+    <string name="workout_name">Workout Name</string>
+
+    <string name="no_Workouts_are_available">No Workouts are available!!!</string>
+    <string name="no_exercises_added">No Exercises Added</string>
+    <string name="no_exercises_inDataBase">No exercises in database</string>
+    <string name="AddExercises">Add Exercise</string>
+    <string name="createWorkout">"Create Workout "</string>
+    <string name="myExercises">My Exercises</string>
+    <string name="finish">finish</string>
 </resources>

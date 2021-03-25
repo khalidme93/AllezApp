@@ -14,6 +14,8 @@ import com.google.android.material.snackbar.Snackbar
 import com.google.firebase.auth.FirebaseAuth
 
 
+
+
 open class BaseActivity : AppCompatActivity() {
 
     private var doubleBackToExitPressedOnce = false
@@ -38,7 +40,9 @@ open class BaseActivity : AppCompatActivity() {
 
 
     fun hideProgressDialog() {
-        mProgressDialog.dismiss()
+        if (::mProgressDialog.isInitialized) {
+            mProgressDialog.dismiss()
+        }
     }
 
     fun getCurrentUserID(): String {

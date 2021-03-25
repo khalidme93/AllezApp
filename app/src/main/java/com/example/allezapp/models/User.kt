@@ -9,7 +9,6 @@ data class User(
         val email: String = "",
         val image: String = "",
         val weight: Long = 0,
-        val fcmToken: String = ""
 ) : Parcelable {
     constructor(source: Parcel) : this(
             source.readString()!!,
@@ -17,7 +16,6 @@ data class User(
             source.readString()!!,
             source.readString()!!,
             source.readLong(),
-            source.readString()!!
     )
 
     override fun describeContents() = 0
@@ -27,7 +25,6 @@ data class User(
         writeString(name)
         writeString(email)
         writeString(image)
-        writeString(fcmToken)
     }
 
     companion object {

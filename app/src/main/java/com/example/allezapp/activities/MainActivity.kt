@@ -6,18 +6,21 @@ import android.os.Build
 import android.os.Bundle
 import android.util.Log
 import android.view.MenuItem
+import android.view.View
 import android.view.WindowInsets
 import android.view.WindowManager
-import android.widget.ImageView
-import android.widget.LinearLayout
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.widget.Toolbar
 import androidx.core.view.GravityCompat
 import androidx.drawerlayout.widget.DrawerLayout
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.bumptech.glide.Glide
 import com.example.allezapp.R
+import com.example.allezapp.firebase.FirebaseWorkouts
 import com.example.allezapp.firebase.FirestoreClass
 import com.example.allezapp.models.User
+import com.example.allezapp.models.Workouts
 import com.google.android.material.navigation.NavigationView
 import com.google.firebase.auth.FirebaseAuth
 
@@ -25,9 +28,11 @@ import com.google.firebase.auth.FirebaseAuth
 @Suppress("DEPRECATION")
 class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedListener {
 
-    companion object{
+    companion object {
         const val MY_PROFILE_REQUEST: Int = 11
     }
+
+    private var pickedWorkout: Workouts? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,25 +42,39 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
         navView.setNavigationItemSelectedListener(this)
 
-
         // Get the current logged in user details.
         FirestoreClass().loadUserData(this@MainActivity)
+        FirebaseWorkouts().getWorkoutList(this)
+
 
         @Suppress("DEPRECATION")
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
             window.insetsController?.hide(WindowInsets.Type.statusBars())
         } else {
             window.setFlags(
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
         val start = findViewById<LinearLayout>(R.id.llStart)
-        start.setOnClickListener{
-            val intent = Intent(this, ExerciseActivity::class.java)
-            startActivity(intent)
+        start.setOnClickListener {
+
+
+            if(pickedWorkout != null) {
+                if(pickedWorkout!!.exercises.size > 0 ) {
+                    val intent = Intent(this, ExerciseActivity::class.java)
+                    intent.putExtra("pickedExercises", pickedWorkout!!.exercises)
+                    startActivity(intent)
+                } else {
+                    Toast.makeText(this, "there is no exercises in this workout", Toast.LENGTH_LONG).show()
+                }
+            } else {
+                Toast.makeText(this, "You have not picked a workout", Toast.LENGTH_LONG).show()
+            }
         }
+
     }
+
 
     override fun onBackPressed() {
         val drawerLayout: DrawerLayout? = findViewById(R.id.drawer_layout)
@@ -72,9 +91,9 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        if(resultCode == Activity.RESULT_OK && requestCode == MY_PROFILE_REQUEST){
+        if (resultCode == Activity.RESULT_OK && requestCode == MY_PROFILE_REQUEST) {
             FirestoreClass().loadUserData(this)
-        }else{
+        } else {
             Log.e("cancelled ", "cancelled ")
         }
 
@@ -83,7 +102,13 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
     override fun onNavigationItemSelected(menuItem: MenuItem): Boolean {
         when (menuItem.itemId) {
             R.id.nav_my_profile -> {
-                startActivityForResult(Intent(this@MainActivity, MyProfileActivity::class.java), MY_PROFILE_REQUEST)
+                startActivityForResult(
+                    Intent(this@MainActivity, MyProfileActivity::class.java),
+                    MY_PROFILE_REQUEST
+                )
+            }
+            R.id.nav_workout -> {
+                startActivity(Intent(this@MainActivity, WorkOutActivity::class.java))
             }
 
             R.id.nav_sign_out -> {
@@ -116,7 +141,7 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
             actionBar.setHomeAsUpIndicator(R.drawable.ic_action_navigation_menu)
         }
 
-        toolBar.setNavigationOnClickListener{
+        toolBar.setNavigationOnClickListener {
             toggleDrawer()
         }
     }
@@ -147,14 +172,31 @@ class MainActivity : BaseActivity(), NavigationView.OnNavigationItemSelectedList
 
         val navUserImage = headerView.findViewById<ImageView>(R.id.iv_user_image)
 
+
         Glide
-                .with(this@MainActivity)
-                .load(user.image) // URL of the image
-                .centerCrop() // Scale type of the image.
-                .placeholder(R.drawable.ic_user_place_holder) // A default place holder
-                .into(navUserImage) // the view in which the image will be loaded.
+            .with(this@MainActivity)
+            .load(user.image) // URL of the image
+            .centerCrop() // Scale type of the image.
+            .placeholder(R.drawable.ic_user_place_holder) // A default place holder
+            .into(navUserImage) // the view in which the image will be loaded.
 
         val navUsername = headerView.findViewById<TextView>(R.id.tv_username)
         navUsername.text = user.name
+    }
+
+    fun populateList(workoutsList: ArrayList<Workouts>) {
+        val listView = findViewById<ListView>(R.id.workoutsList)
+        if (workoutsList.size > 0) {
+            listView.visibility = View.VISIBLE
+
+            listView.adapter =
+                ArrayAdapter<Workouts>(this, android.R.layout.simple_list_item_1, workoutsList)
+            listView.setOnItemClickListener { adapterView, view, position: Int, id: Long ->
+                pickedWorkout = workoutsList[position]
+            }
+
+        } else {
+            listView.visibility = View.GONE
+        }
     }
 }

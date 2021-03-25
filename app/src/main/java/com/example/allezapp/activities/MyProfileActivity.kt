@@ -8,6 +8,7 @@ import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
+import android.text.TextUtils
 import android.util.Log
 import android.view.WindowInsets
 import android.view.WindowManager
@@ -38,7 +39,7 @@ class MyProfileActivity : BaseActivity() {
     }
 
     private var mSelectedImageFileUri: Uri? = null
-    private var mProfileImageURL : String = ""
+    private var mProfileImageURL: String = ""
     private lateinit var mUserDetails: User
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -53,7 +54,8 @@ class MyProfileActivity : BaseActivity() {
                     this,
                     Manifest.permission.READ_EXTERNAL_STORAGE
                 )
-                == PackageManager.PERMISSION_GRANTED) {
+                == PackageManager.PERMISSION_GRANTED
+            ) {
                 showImageChooser()
             } else {
                 ActivityCompat.requestPermissions(
@@ -77,18 +79,18 @@ class MyProfileActivity : BaseActivity() {
         }
         var uploadBtn = findViewById<Button>(R.id.btn_update)
 
-        uploadBtn.setOnClickListener{
-            if(mSelectedImageFileUri != null){
-                uploadUserImage()
-            }else{
-                showProgressDialog(resources.getString(R.string.please_wait))
-                updateUserProfileData()
+        uploadBtn.setOnClickListener {
+            var userName = findViewById<TextView>(R.id.et_name_MyProfile)
+            if (validateName(userName.text.toString())) {
+                if (mSelectedImageFileUri != null) {
+                    uploadUserImage()
+                } else {
+                    showProgressDialog(resources.getString(R.string.please_wait))
+                    updateUserProfileData()
+                }
             }
         }
-
     }
-
-
 
 
     override fun onRequestPermissionsResult(
@@ -97,12 +99,12 @@ class MyProfileActivity : BaseActivity() {
         grantResults: IntArray
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if(requestCode == READ_STORAGE_PERMISSION_CODE){
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED){
+        if (requestCode == READ_STORAGE_PERMISSION_CODE) {
+            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
                 showImageChooser()
 
             }
-        }else{
+        } else {
             Toast.makeText(
                 this,
                 "Ops, you just denied the permission, you can allow it from the settings",
@@ -112,7 +114,7 @@ class MyProfileActivity : BaseActivity() {
     }
 
 
-    private fun showImageChooser(){
+    private fun showImageChooser() {
         var galleryIntent = Intent(Intent.ACTION_PICK, MediaStore.Images.Media.EXTERNAL_CONTENT_URI)
         startActivityForResult(galleryIntent, PICK_IMAGE_REQUEST_CODE)
     }
@@ -121,7 +123,8 @@ class MyProfileActivity : BaseActivity() {
         super.onActivityResult(requestCode, resultCode, data)
         if (resultCode == RESULT_OK
             && requestCode == PICK_IMAGE_REQUEST_CODE
-            && data!!.data != null){
+            && data!!.data != null
+        ) {
             mSelectedImageFileUri = data.data
 
             try {
@@ -132,7 +135,7 @@ class MyProfileActivity : BaseActivity() {
                     .placeholder(R.drawable.ic_user_place_holder)
                     .into(findViewById<CircleImageView>(R.id.iv_user_image_MyProfile))
 
-            }catch (e: IOException){
+            } catch (e: IOException) {
                 e.printStackTrace()
             }
         }
@@ -153,12 +156,11 @@ class MyProfileActivity : BaseActivity() {
         toolBar.setNavigationOnClickListener { onBackPressed() }
     }
 
-    fun setUserDataInUI(user: User){
+    fun setUserDataInUI(user: User) {
 
         mUserDetails = user
         var userName = findViewById<TextView>(R.id.et_name_MyProfile)
         var email = findViewById<TextView>(R.id.et_email_MyProfile)
-        var weight = findViewById<TextView>(R.id.et_weight)
 
 
         Glide
@@ -167,55 +169,50 @@ class MyProfileActivity : BaseActivity() {
             .centerCrop()
             .placeholder(R.drawable.ic_user_place_holder)
             .into(findViewById<CircleImageView>(R.id.iv_user_image_MyProfile))
-            userName.setText(user.name)
-            email.setText(user.email)
+        userName.setText(user.name)
+        email.setText(user.email)
 
-        weight.setText(user.weight.toString())
     }
 
 
-    private fun updateUserProfileData(){
+    private fun updateUserProfileData() {
         var userName = findViewById<TextView>(R.id.et_name_MyProfile)
-        var weight = findViewById<TextView>(R.id.et_weight)
 
         val userHashMap = HashMap<String, Any>()
 
-        if(mProfileImageURL.isNotEmpty() && mProfileImageURL != mUserDetails.image){
+        if (mProfileImageURL.isNotEmpty() && mProfileImageURL != mUserDetails.image) {
             userHashMap[Constants.IMAGE] = mProfileImageURL
         }
-        if(userName.text.toString() != mUserDetails.name){
+        if (userName.text.toString() != mUserDetails.name) {
             userHashMap[Constants.NAME] = userName.text.toString()
 
         }
-        if(weight.text.toString() != mUserDetails.weight.toString()) {
-            userHashMap[Constants.WEIGHT] = weight.text.toString().toLong()
-        }
-            FirestoreClass().updateUserProfileData(this, userHashMap)
+        FirestoreClass().updateUserProfileData(this, userHashMap)
     }
 
-    private fun uploadUserImage(){
+    private fun uploadUserImage() {
         showProgressDialog(resources.getString(R.string.please_wait))
 
-        if(mSelectedImageFileUri != null){
+        if (mSelectedImageFileUri != null) {
             val sRef: StorageReference =
                 FirebaseStorage.getInstance().reference.child(
-                    "USER_IMAGE" + System.currentTimeMillis() + "." + getFileExtension(mSelectedImageFileUri))
+                    "USER_IMAGE" + System.currentTimeMillis() + "." + getFileExtension(
+                        mSelectedImageFileUri
+                    )
+                )
 
-            sRef.putFile(mSelectedImageFileUri!!).addOnSuccessListener {
-                taskSnapshot ->
+            sRef.putFile(mSelectedImageFileUri!!).addOnSuccessListener { taskSnapshot ->
                 Log.i(
                     "Firebase Image URL",
                     taskSnapshot.metadata!!.reference!!.downloadUrl.toString()
                 )
-                taskSnapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener{
-                    uri->
+                taskSnapshot.metadata!!.reference!!.downloadUrl.addOnSuccessListener { uri ->
                     Log.i("Downloadable Image URL", uri.toString())
                     mProfileImageURL = uri.toString()
                     updateUserProfileData()
 
                 }
-            }.addOnFailureListener{
-                exception ->
+            }.addOnFailureListener { exception ->
                 Toast.makeText(
                     this@MyProfileActivity,
                     exception.message,
@@ -227,13 +224,22 @@ class MyProfileActivity : BaseActivity() {
         }
     }
 
-    private fun getFileExtension(uri: Uri?): String?{
+    private fun getFileExtension(uri: Uri?): String? {
         return MimeTypeMap.getSingleton().getExtensionFromMimeType(contentResolver.getType(uri!!))
     }
 
-    fun profileUpdateSuccess(){
+    fun profileUpdateSuccess() {
         hideProgressDialog()
         setResult(Activity.RESULT_OK)
         finish()
+    }
+
+    private fun validateName(name: String): Boolean {
+        return if (TextUtils.isEmpty(name)) {
+            showErrorSnackBar("Please enter name.")
+            false
+        } else {
+            true
+        }
     }
 }

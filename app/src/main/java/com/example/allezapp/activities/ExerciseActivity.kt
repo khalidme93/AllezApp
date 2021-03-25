@@ -1,7 +1,7 @@
 package com.example.allezapp.activities
 
+import android.content.Intent
 import android.media.MediaPlayer
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.os.CountDownTimer
@@ -13,32 +13,40 @@ import android.view.WindowManager
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.appcompat.widget.Toolbar
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.example.allezapp.R
-import com.example.allezapp.models.Exercise
-import com.example.allezapp.utils.Constant
+import com.example.allezapp.adapters.ExerciseStatusAdapter
+import com.example.allezapp.firebase.FirebaseExercises
+import com.example.allezapp.models.Exercises
+
 import java.lang.Exception
 import java.util.*
 import kotlin.collections.ArrayList
 
 @Suppress("DEPRECATION")
 class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
-
+    private var pause = false
     private var restTimer: CountDownTimer? = null
     private var restProgress = 0
     private var exerciseTimer: CountDownTimer? = null
     private var exerciseProgress = 0
-    private var exerciseList: ArrayList<Exercise>? = null
+    private var exerciseList: ArrayList<Exercises> = ArrayList<Exercises>()
     private var currentExercisePosition = -1
     private var tts: TextToSpeech? = null
     private var player: MediaPlayer? = null
+    private var exerciseAdapter: ExerciseStatusAdapter? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_excerise)
         setupActionBar()
         tts = TextToSpeech(this, this)
-        exerciseList = Constant.defaultExerciseList()
-        setupRestView()
+        val exerciseList: ArrayList<String> =
+            intent.getSerializableExtra("pickedExercises") as ArrayList<String>
+        FirebaseExercises().getExercisesFromIds(exerciseList, this)
+
+
 
 
         @Suppress("DEPRECATION")
@@ -46,13 +54,37 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             window.insetsController?.hide(WindowInsets.Type.statusBars())
         } else {
             window.setFlags(
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                    WindowManager.LayoutParams.FLAG_FULLSCREEN
+                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                WindowManager.LayoutParams.FLAG_FULLSCREEN
             )
         }
 
+        findViewById<Button>(R.id.next).setOnClickListener {
+            currentExercisePosition++
+
+            if (currentExercisePosition < exerciseList.size) {
+                setupExerciseView()
+            } else {
+                finish()
+                val intent = Intent(this@ExerciseActivity, FinishActivity::class.java)
+                startActivity(intent)
+            }
+        }
+
+        findViewById<Button>(R.id.previous).setOnClickListener {
+            currentExercisePosition--
+            if (currentExercisePosition >= 0){
+                setupExerciseView()
+            }else{
+                finish()
+                val intent = Intent(this@ExerciseActivity, FinishActivity::class.java)
+                startActivity(intent)
+
+            }
+        }
 
     }
+
 
     private fun setupActionBar() {
 
@@ -63,6 +95,8 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         if (actionBar != null) {
             actionBar.setDisplayHomeAsUpEnabled(true)
             actionBar.setHomeAsUpIndicator(R.drawable.ic_baseline_arrow_back_ios_24)
+            actionBar.title = resources.getString(R.string.exercises)
+
         }
 
         toolBar.setNavigationOnClickListener { onBackPressed() }
@@ -81,7 +115,7 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             tts!!.stop()
             tts!!.shutdown()
         }
-        if(player!= null){
+        if (player != null) {
             player!!.stop()
         }
 
@@ -99,6 +133,8 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
             override fun onFinish() {
                 currentExercisePosition++
+                exerciseList!![currentExercisePosition].setIsSelected(true)
+                exerciseAdapter!!.notifyDataSetChanged()
                 setupExerciseView()
             }
         }.start()
@@ -122,29 +158,45 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
             restTimer!!.cancel()
             restProgress = 0
         }
-        findViewById<TextView>(R.id.tvUpcomingExerciseName).text = exerciseList!![currentExercisePosition + 1].getName()
+        findViewById<TextView>(R.id.tvUpcomingExerciseName).text =
+            exerciseList!![currentExercisePosition + 1].getName()
         setRestProgressBar()
 
     }
 
     private fun setExerciseProgressBar() {
+
+
         findViewById<ProgressBar>(R.id.progressBarExercise).progress = exerciseProgress
         exerciseTimer = object : CountDownTimer(30000, 1000) {
             override fun onTick(millisUntilFinished: Long) {
                 exerciseProgress++
                 findViewById<ProgressBar>(R.id.progressBarExercise).progress = 30 - exerciseProgress
-                findViewById<TextView>(R.id.tvExerciseTimer).text = (30 - exerciseProgress).toString()
+                findViewById<TextView>(R.id.tvExerciseTimer).text =
+                    (30 - exerciseProgress).toString()
+                findViewById<ProgressBar>(R.id.progressBarExercise).setOnClickListener {
+                    if (pause == false) {
+                        pause = true
+                        exerciseTimer!!.cancel()
+                    } else if (pause == true) {
+                        pause = false
+                        exerciseTimer!!.start()
+
+                    }
+                }
             }
+
 
             override fun onFinish() {
                 if (currentExercisePosition < exerciseList?.size!! - 1) {
+                    exerciseList!![currentExercisePosition].setIsSelected(false)
+                    exerciseList!![currentExercisePosition].setIsCompleted(true)
+                    exerciseAdapter!!.notifyDataSetChanged()
                     setupRestView()
                 } else {
-                    Toast.makeText(
-                            this@ExerciseActivity,
-                            "GOOD JOB",
-                            Toast.LENGTH_SHORT
-                    ).show()
+                    finish()
+                    val intent = Intent(this@ExerciseActivity, FinishActivity::class.java)
+                    startActivity(intent)
                 }
             }
         }.start()
@@ -161,8 +213,13 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
         }
         speakOut(exerciseList!![currentExercisePosition].getName())
         setExerciseProgressBar()
-        findViewById<ImageView>(R.id.ivImage).setImageResource(exerciseList!![currentExercisePosition].getImage())
-        findViewById<TextView>(R.id.tvExerciseName).text = exerciseList!![currentExercisePosition].getName()
+        FirebaseExercises().getExerciseImage(
+            exerciseList!![currentExercisePosition].image,
+            findViewById<ImageView>(R.id.ivImage)
+        )
+        findViewById<TextView>(R.id.tvExerciseName).text =
+            exerciseList!![currentExercisePosition].getName()
+        Log.d("msg", "show me my image" + exerciseList!![currentExercisePosition].image)
     }
 
     override fun onInit(status: Int) {
@@ -179,6 +236,22 @@ class ExerciseActivity : AppCompatActivity(), TextToSpeech.OnInitListener {
 
     private fun speakOut(text: String) {
         tts!!.speak(text, TextToSpeech.QUEUE_FLUSH, null, "")
+    }
+
+    private fun setupExerciseStatusRecyclerView() {
+        val rvExerciseStatus = findViewById<RecyclerView>(R.id.rvExerciseStatus)
+        rvExerciseStatus.layoutManager =
+            LinearLayoutManager(this, LinearLayoutManager.HORIZONTAL, false)
+
+        exerciseAdapter = ExerciseStatusAdapter(exerciseList!!, this)
+
+        rvExerciseStatus.adapter = exerciseAdapter
+    }
+
+    fun startExercise(data: ArrayList<Exercises>) {
+        exerciseList = data
+        setupRestView()
+        setupExerciseStatusRecyclerView()
     }
 }
 
